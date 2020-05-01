@@ -9,6 +9,8 @@ threshold = 60
 blurValue = 41  
 bgSubThreshold = 50
 learningRate = 0
+blur = []
+
 
 # variables
 isBgCaptured = 0   # bool, whether the background captured
@@ -74,3 +76,5 @@ while camera.isOpened():
     elif k == ord('n'):
         triggerSwitch = True
         print ('!!!Trigger On!!!')
+    elif k == ord('c'):
+        cv2.imwrite('captured.jpg', blur)
