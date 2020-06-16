@@ -28,12 +28,15 @@ def removeBG(frame):
     return res
 camera = cv2.VideoCapture(0)
 camera.set(10,200)
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 512)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
 cv2.namedWindow('trackbar')
 cv2.createTrackbar('trh1', 'trackbar', threshold, 100, printThreshold)
 
 
 while camera.isOpened():
     ret, frame = camera.read()
+    # print(frame.shape)
     threshold = cv2.getTrackbarPos('trh1', 'trackbar')
     frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
     frame = cv2.flip(frame, 1)  # flip the frame horizontally
@@ -43,11 +46,15 @@ while camera.isOpened():
 
     #  Main operation
     if isBgCaptured == 1:  # this part wont run until background captured
+        fgmask = bgModel.apply(frame,learningRate=learningRate)
+        kernel = np.ones((3, 3), np.uint8)
+        fgmask = cv2.erode(fgmask, kernel, iterations=1)
+        cv2.imshow('bgmask', fgmask)
         img = removeBG(frame)
         img = img[0:int(cap_region_y_end * frame.shape[0]),
                     int(cap_region_x_begin * frame.shape[1]):frame.shape[1]]  # clip the ROI
         cv2.imshow('mask', img)
-
+        
         # convert the image into binary image
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (blurValue, blurValue), 0)
@@ -77,4 +84,5 @@ while camera.isOpened():
         triggerSwitch = True
         print ('!!!Trigger On!!!')
     elif k == ord('c'):
+        print("!!! Image Captured!!!")
         cv2.imwrite('captured.jpg', blur)
