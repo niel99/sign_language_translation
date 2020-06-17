@@ -2,15 +2,23 @@ import cv2
 import numpy as np
 import copy
 import math
+import os
+import tensorflow.keras as keras
 
+folder = 'E'
+if os.path.exists(folder) == False:
+    os.mkdir(folder)
 cap_region_x_begin=0.5  
 cap_region_y_end=0.8  
 threshold = 60  
-blurValue = 41  
+blurValue = 25  
 bgSubThreshold = 50
 learningRate = 0
 blur = []
 
+idx = 0
+
+model = keras.models.load_model("model")
 
 # variables
 isBgCaptured = 0   # bool, whether the background captured
@@ -26,13 +34,20 @@ def removeBG(frame):
     fgmask = cv2.erode(fgmask, kernel, iterations=1)
     res = cv2.bitwise_and(frame, frame, mask=fgmask)
     return res
+
+def get_prediction(arr, model):
+    classes = model.predict_classes(arr.reshape(1,28,28,1))
+    if len(classes) > 0:
+        return get_prediction(classes[0])
+    return ''
+
 camera = cv2.VideoCapture(0)
 camera.set(10,200)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 512)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
 cv2.namedWindow('trackbar')
 cv2.createTrackbar('trh1', 'trackbar', threshold, 100, printThreshold)
-
+thresh = []
 
 while camera.isOpened():
     ret, frame = camera.read()
@@ -85,4 +100,8 @@ while camera.isOpened():
         print ('!!!Trigger On!!!')
     elif k == ord('c'):
         print("!!! Image Captured!!!")
-        cv2.imwrite('captured.jpg', blur)
+        cv2.imwrite('{}/captured{}.jpg'.format(folder,idx), blur)
+        idx+=1
+    elif k == ord('q'):
+        print("!!!Quitting!!!")
+        break
