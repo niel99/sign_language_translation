@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import copy
 import math
+from time import sleep
 import os
 import tensorflow.keras as keras
 
@@ -17,12 +18,21 @@ learningRate = 0
 blur = []
 
 idx = 0
+idx2 = 0
+flag = 0
 
-model = keras.models.load_model("model")
+model = keras.models.load_model("model4")
 
 # variables
 isBgCaptured = 0   # bool, whether the background captured
 triggerSwitch = False 
+pred_dict = {}
+ch = 'A'
+for i in range(25):
+    if ch == 'J':
+        ch = chr(ord(ch)+1)
+    pred_dict[i] = ch
+    ch = chr(ord(ch)+1)
 
 def printThreshold(thr):
     print("! Changed threshold to "+str(thr))
@@ -36,9 +46,9 @@ def removeBG(frame):
     return res
 
 def get_prediction(arr, model):
-    classes = model.predict_classes(arr.reshape(1,28,28,1))
+    classes = model.predict_classes(arr.reshape(-1,36,30,1))
     if len(classes) > 0:
-        return get_prediction(classes[0])
+        return pred_dict[classes[0]]
     return ''
 
 camera = cv2.VideoCapture(0)
@@ -105,3 +115,17 @@ while camera.isOpened():
     elif k == ord('q'):
         print("!!!Quitting!!!")
         break
+    elif k==ord('t'):
+        print("!!!Testing Image Captured!!!")
+        cv2.imwrite('captured{}.jpg'.format(idx2), blur)
+        idx2+=1
+    elif k==ord('s'):
+        print("Started prediction")
+        flag = 1
+
+        
+    if flag:
+        arr = cv2.resize(blur, (30,36))
+        arr = arr/255
+        s= get_prediction(arr, model)
+        print(s)
