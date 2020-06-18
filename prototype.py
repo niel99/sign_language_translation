@@ -12,7 +12,7 @@ if os.path.exists(folder) == False:
 cap_region_x_begin=0.5  
 cap_region_y_end=0.8  
 threshold = 60  
-blurValue = 25  
+blurValue = 15  
 bgSubThreshold = 50
 learningRate = 0
 blur = []
@@ -46,8 +46,11 @@ def removeBG(frame):
     return res
 
 def get_prediction(arr, model):
+    fl = list(arr.flatten())
+    if fl.count(0) == len(fl):
+        return ''
     classes = model.predict_classes(arr.reshape(-1,36,30,1))
-    if len(classes) > 0:
+    if len(classes) == 1:
         return pred_dict[classes[0]]
     return ''
 
@@ -58,6 +61,7 @@ camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
 cv2.namedWindow('trackbar')
 cv2.createTrackbar('trh1', 'trackbar', threshold, 100, printThreshold)
 thresh = []
+prev = None
 
 while camera.isOpened():
     ret, frame = camera.read()
@@ -128,4 +132,8 @@ while camera.isOpened():
         arr = cv2.resize(blur, (30,36))
         arr = arr/255
         s= get_prediction(arr, model)
+        if s == prev:
+            continue
         print(s)
+        sleep(0.1)
+        prev = s
